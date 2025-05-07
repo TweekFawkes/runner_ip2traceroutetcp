@@ -16,10 +16,11 @@ This script remotely executes the `traceroute` command on a target host via SSH 
 ## Usage
 
 ```bash
-python app.py [-v] <ip_address>
+python app.py [-v] <ip_address> <tcp_port>
 ```
 
 *   `<ip_address>`: The target IP address to `traceroute` *from* the `REMOTE_HOST`.
+*   `<tcp_port>`: The target TCP port to use for the `traceroute`.
 *   `-v` or `--verbose`: (Optional) Enable verbose output, showing informational messages about the process.
 
 ## Workflow
@@ -34,7 +35,7 @@ python app.py [-v] <ip_address>
 4.  **Remote Execution:**
     *   Constructs an `ssh` command to connect to `REMOTE_USER@REMOTE_HOST` (default `REMOTE_USER` is `root`) using the extracted `001.bin` key.
     *   Disables strict host key checking (`StrictHostKeyChecking=no`) and uses `/dev/null` for known hosts (`UserKnownHostsFile=/dev/null`).
-    *   Remotely executes `traceroute -n -q 5 <ip_address>` on the `REMOTE_HOST` (using the path `/usr/sbin/traceroute`).
+    *   Remotely executes `traceroute -n -T -p <tcp_port> <ip_address>` on the `REMOTE_HOST` (using the path `/usr/sbin/traceroute`).
 5.  **Output:** Prints the standard output and standard error from the remote `traceroute` command executed via SSH. It filters out common SSH connection messages from stderr for clarity.
 6.  **Cleanup:** Removes the temporary directory and its contents.
 7.  **Exit Code:** Exits with the return code of the remote `ssh` command (which reflects the success/failure of the remote `traceroute`).

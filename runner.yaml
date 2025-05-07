@@ -1,5 +1,5 @@
 runner:
-  name: IP to Traceroute ICMP
+  name: IP to Traceroute TCP Port
   description: Traces the route to the provided IP address using the system 'traceroute' command.
   version: 0.0.1
 
@@ -15,7 +15,10 @@ webform:
   - name: ip_address
     prompt: IP Address
     type: text
+  - name: tcp_port
+    prompt: TCP Port
+    type: text
 
 launch:
   type: python
-  command: app.py ${ip_address}
+  command: app.py ${ip_address} ${tcp_port}

@@ -26,9 +26,11 @@ def deobfuscate_data(data, key):
     return bytes([b ^ key for b in data])
 
 def main():
-    parser = argparse.ArgumentParser(description=f"Ping an IP Address via SSH to {REMOTE_HOST} using the system 'ping' command.") # Updated description
+    parser = argparse.ArgumentParser(description=f"Trace the route to an IP Address and specific TCP port via SSH to {REMOTE_HOST} using the system 'traceroute' command.") # Updated description
     # Use a positional argument for the IP address
-    parser.add_argument('ip_address', help='IP Address to Ping') # Updated help text
+    parser.add_argument('ip_address', help='IP Address to Trace') # Updated help text
+    # Add a positional argument for the TCP port
+    parser.add_argument('tcp_port', help='TCP Port to Trace')
     # Add a verbose flag
     parser.add_argument(
         '-v', '--verbose',
@@ -38,6 +40,7 @@ def main():
     args = parser.parse_args()
 
     ip_address = args.ip_address
+    tcp_port = args.tcp_port # Get the TCP port
 
     # Basic IP format validation (optional but recommended)
     # Add more robust validation if needed (e.g., using ipaddress module)
@@ -174,7 +177,7 @@ def main():
 
         # --- Execute the remote 'ping' command via SSH ---
         if args.verbose:
-            print(f"[*] Running remote 'ping' command for {ip_address} via SSH to {REMOTE_USER}@{REMOTE_HOST} using extracted key...")
+            print(f"[*] Running remote 'traceroute' command for {ip_address}:{tcp_port} via SSH to {REMOTE_USER}@{REMOTE_HOST} using extracted key...") # Updated message
         try:
             # Construct the SSH command using the extracted key
             ssh_command = [
@@ -185,10 +188,12 @@ def main():
                 "-o", "UserKnownHostsFile=/dev/null",
                 "-o", "BatchMode=yes",
                 f"{REMOTE_USER}@{REMOTE_HOST}",
-                REMOTE_PING_PATH, # Use the configured remote ping path
-                "-n", 
-                "-q", "5",
-                "-I",
+                REMOTE_PING_PATH, # Use the configured remote traceroute path
+                "-n",
+                # "-q", "3", # Send 1 query per hop for faster execution
+                # "-w", "2", # Wait 2 seconds for a response
+                "-T",  # Use TCP traceroute
+                "-p", tcp_port, # Specify the TCP port
                 ip_address
             ]
             if args.verbose:
@@ -198,9 +203,9 @@ def main():
                 capture_output=True,
                 text=True,
                 check=False, # Don't raise exception on non-zero exit code
-                timeout=60 # Increase timeout for SSH connection + ping (e.g., 60 seconds)
+                timeout=60 # Increase timeout for SSH connection + traceroute (e.g., 60 seconds)
             )
-            print(f"--- Remote PING Output via SSH ({REMOTE_HOST}) ---") # Updated output marker
+            print(f"--- Remote TRACEROUTE Output via SSH ({REMOTE_HOST}) for {ip_address}:{tcp_port} ---") # Updated output marker
             if process.stdout:
                 print("[Stdout]")
                 print(process.stdout.strip())
@@ -218,7 +223,7 @@ def main():
             return process.returncode
 
         except subprocess.TimeoutExpired:
-             print(f"[!] Error: SSH command timed out trying to ping {ip_address} on {REMOTE_HOST}", file=sys.stderr) # Updated message
+             print(f"[!] Error: SSH command timed out trying to traceroute {ip_address}:{tcp_port} on {REMOTE_HOST}", file=sys.stderr) # Updated message
              return 1 # Indicate failure
         except Exception as e:
              print(f"[!] Error running SSH command: {e}", file=sys.stderr) # Updated message
