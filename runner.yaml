@@ -1,0 +1,21 @@
+runner:
+  name: IP to Traceroute ICMP
+  description: Traces the route to the provided IP address using the system 'traceroute' command.
+  version: 0.0.1
+
+build:
+  commands: |
+    echo "START: Building the runner"
+    apt update
+    apt install -y p7zip-full
+    apt install -y openssh-client
+    echo "END: Building the runner"
+
+webform:
+  - name: ip_address
+    prompt: IP Address
+    type: text
+
+launch:
+  type: python
+  command: app.py ${ip_address}
